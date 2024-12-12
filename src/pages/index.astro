@@ -1,11 +1,72 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
-
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Planificador de Rutas">
+  <main>
+    <div class="container">
+      <h1>Planificador de Rutas</h1>
+      <div class="options">
+        <a href="/simple-route" class="option-card">
+          <h2>Ruta entre dos puntos</h2>
+          <p>Calcula la mejor ruta entre un punto de origen y un destino</p>
+        </a>
+        <a href="/multi-stop" class="option-card">
+          <h2>Ruta con paradas intermedias</h2>
+          <p>Planifica una ruta con múltiples paradas entre el origen y el destino</p>
+        </a>
+      </div>
+    </div>
+  </main>
 </Layout>
+
+<style>
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: #2c3e50;
+  }
+
+  .options {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: stretch;
+    margin-top: 2rem;
+  }
+
+  .option-card {
+    flex: 1;
+    max-width: 400px;
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .option-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  h2 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #2c3e50;
+  }
+
+  p {
+    color: #666;
+    line-height: 1.6;
+  }
+</style>

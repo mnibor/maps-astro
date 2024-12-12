@@ -1,0 +1,155 @@
+---
+---
+<div class="map-container">
+  <div class="search-controls">
+    <div class="input-group">
+      <input type="text" id="startLocation" placeholder="Ubicación de salida (ej: Obelisco, Buenos Aires)" />
+      <button id="useCurrentLocation">Mi ubicación</button>
+    </div>
+    <div class="input-group">
+      <input type="text" id="endLocation" placeholder="Ubicación de llegada (ej: Congreso, Buenos Aires)" />
+      <button id="swapLocations" title="Intercambiar origen y destino">
+        <span>↑↓</span>
+      </button>
+    </div>
+    <div class="cost-calculator">
+      <label for="costPerKm">Costo por km ($):</label>
+      <input 
+        type="number" 
+        id="costPerKm" 
+        min="0" 
+        step="0.01" 
+        placeholder="Ingrese costo por km"
+        value="100"
+      />
+    </div>
+    <div class="button-group">
+      <button id="resetRoute">Resetear Ruta</button>
+    </div>
+    <div class="info-container">
+      <div id="distanceInfo" class="info-box"></div>
+      <div id="costInfo" class="info-box"></div>
+    </div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<style>
+  .map-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+  }
+  
+  #map {
+    height: 100%;
+    width: 100%;
+  }
+
+  .search-controls {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    min-width: 320px;
+  }
+
+  .input-group {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 300px;
+  }
+
+  .cost-calculator {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cost-calculator input {
+    min-width: 100px;
+    width: 120px;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .button-group button {
+    flex: 1;
+  }
+
+  button {
+    padding: 8px 16px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #357abd;
+  }
+
+  #swapLocations {
+    padding: 8px 12px;
+    background: #6c757d;
+  }
+
+  #resetRoute {
+    background: #dc3545;
+  }
+
+  #resetRoute:hover {
+    background: #c82333;
+  }
+
+  .info-container {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-box {
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  #costInfo {
+    color: #28a745;
+  }
+</style>
+
+<script>
+  import { initMap, setupSimpleRouteHandlers } from '../utils/simpleRouteMap';
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const map = initMap();
+    setupSimpleRouteHandlers(map);
+  });
+</script>

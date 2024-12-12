@@ -1,0 +1,336 @@
+---
+---
+<div class="map-container">
+  <div class="search-controls">
+    <div class="input-group">
+      <input type="text" id="startLocation" placeholder="Ubicación de salida (ej: Obelisco, Buenos Aires)" />
+      <button id="useCurrentLocation">Mi ubicación</button>
+    </div>
+    <div class="input-group">
+      <input type="text" id="endLocation" placeholder="Ubicación de llegada (ej: Congreso, Buenos Aires)" />
+      <button id="swapLocations" title="Intercambiar origen y destino">
+        <span>↑↓</span>
+      </button>
+    </div>
+    <div class="cost-calculator">
+      <label for="costPerKm">Costo por km ($):</label>
+      <input 
+        type="number" 
+        id="costPerKm" 
+        min="0" 
+        step="0.01" 
+        placeholder="Ingrese costo por km"
+        value="100"
+      />
+    </div>
+    <div class="button-group">
+      <button id="calculateRoute">Calcular Ruta</button>
+      <button id="resetRoute">Resetear Ruta</button>
+    </div>
+    <div class="info-container">
+      <div id="distanceInfo" class="info-box"></div>
+      <div id="costInfo" class="info-box"></div>
+    </div>
+  </div>
+  <div id="map"></div>
+</div>
+
+<style>
+  .map-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+  }
+  
+  #map {
+    height: 100%;
+    width: 100%;
+  }
+
+  .search-controls {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    min-width: 320px;
+  }
+
+  .input-group {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  input {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    min-width: 300px;
+  }
+
+  .cost-calculator {
+    margin: 15px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .cost-calculator input {
+    min-width: 100px;
+    width: 120px;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .button-group button {
+    flex: 1;
+  }
+
+  button {
+    padding: 8px 16px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+  button:hover {
+    background: #357abd;
+  }
+
+  #swapLocations {
+    padding: 8px 12px;
+    background: #6c757d;
+  }
+
+  #resetRoute {
+    background: #dc3545;
+  }
+
+  #resetRoute:hover {
+    background: #c82333;
+  }
+
+  .info-container {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .info-box {
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+  }
+
+  #costInfo {
+    color: #28a745;
+  }
+</style>
+
+<script>
+  import L from 'leaflet';
+  import 'leaflet/dist/leaflet.css';
+  import 'leaflet-routing-machine';
+  import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+  import { searchLocation, calculateDistance } from '../utils/mapUtils';
+
+  let map;
+  let routingControl;
+  let startMarker;
+  let endMarker;
+  let currentStep = 'start';
+  let currentDistance = 0;
+
+  function updateCost() {
+    const costPerKm = parseFloat(document.getElementById('costPerKm').value) || 0;
+    const totalCost = (currentDistance * costPerKm).toFixed(2);
+    document.getElementById('costInfo').textContent = `Costo estimado: $${totalCost}`;
+  }
+
+  function initMap(lat = -34.6037, lng = -58.3816) {
+    map = L.map('map').setView([lat, lng], 13);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    routingControl = L.Routing.control({
+      show: false,
+      addWaypoints: false,
+      draggableWaypoints: false,
+      lineOptions: {
+        styles: [{ color: '#4a90e2', weight: 4 }]
+      }
+    }).addTo(map);
+
+    routingControl.on('routesfound', function(e) {
+      const routes = e.routes;
+      currentDistance = routes[0].summary.totalDistance / 1000;
+      document.getElementById('distanceInfo').textContent = `Distancia total: ${currentDistance.toFixed(2)} km`;
+      updateCost();
+    });
+
+    map.on('click', handleMapClick);
+  }
+
+  function handleMapClick(e) {
+    const latlng = e.latlng;
+    
+    if (currentStep === 'start') {
+      if (startMarker) map.removeLayer(startMarker);
+      startMarker = L.marker(latlng).addTo(map);
+      document.getElementById('startLocation').value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+      currentStep = 'end';
+    } else {
+      if (endMarker) map.removeLayer(endMarker);
+      endMarker = L.marker(latlng).addTo(map);
+      document.getElementById('endLocation').value = `${latlng.lat.toFixed(6)}, ${latlng.lng.toFixed(6)}`;
+      currentStep = 'start';
+      calculateRoute();
+    }
+  }
+
+  function resetRoute() {
+    if (startMarker) map.removeLayer(startMarker);
+    if (endMarker) map.removeLayer(endMarker);
+    routingControl.setWaypoints([]);
+    document.getElementById('startLocation').value = '';
+    document.getElementById('endLocation').value = '';
+    document.getElementById('distanceInfo').textContent = '';
+    document.getElementById('costInfo').textContent = '';
+    currentStep = 'start';
+    currentDistance = 0;
+    startMarker = null;
+    endMarker = null;
+  }
+
+  function swapLocations() {
+    const startInput = document.getElementById('startLocation');
+    const endInput = document.getElementById('endLocation');
+    const tempValue = startInput.value;
+    startInput.value = endInput.value;
+    endInput.value = tempValue;
+
+    if (startMarker && endMarker) {
+      const tempLatLng = startMarker.getLatLng();
+      startMarker.setLatLng(endMarker.getLatLng());
+      endMarker.setLatLng(tempLatLng);
+      calculateRoute();
+    }
+  }
+
+  async function calculateRoute() {
+    const startInput = document.getElementById('startLocation').value;
+    const endInput = document.getElementById('endLocation').value;
+
+    if (!startInput || !endInput) {
+      alert('Por favor, ingrese tanto el origen como el destino');
+      return;
+    }
+
+    let startCoords, endCoords;
+
+    try {
+      if (startInput.includes(',')) {
+        const [lat, lng] = startInput.split(',').map(coord => parseFloat(coord.trim()));
+        startCoords = { lat, lng };
+      } else {
+        startCoords = await searchLocation(startInput + ', Argentina');
+      }
+
+      if (endInput.includes(',')) {
+        const [lat, lng] = endInput.split(',').map(coord => parseFloat(coord.trim()));
+        endCoords = { lat, lng };
+      } else {
+        endCoords = await searchLocation(endInput + ', Argentina');
+      }
+
+      if (startCoords && endCoords) {
+        if (startMarker) map.removeLayer(startMarker);
+        if (endMarker) map.removeLayer(endMarker);
+        
+        startMarker = L.marker([startCoords.lat, startCoords.lng]).addTo(map);
+        endMarker = L.marker([endCoords.lat, endCoords.lng]).addTo(map);
+        
+        routingControl.setWaypoints([
+          L.latLng(startCoords.lat, startCoords.lng),
+          L.latLng(endCoords.lat, endCoords.lng)
+        ]);
+
+        // Ajustar la vista para mostrar toda la ruta
+        const bounds = L.latLngBounds([
+          [startCoords.lat, startCoords.lng],
+          [endCoords.lat, endCoords.lng]
+        ]);
+        map.fitBounds(bounds, { padding: [50, 50] });
+      } else {
+        alert('No se pudieron encontrar una o ambas ubicaciones');
+      }
+    } catch (error) {
+      console.error('Error al calcular la ruta:', error);
+      alert('Error al calcular la ruta. Por favor, intente nuevamente.');
+    }
+  }
+
+  function getCurrentLocation() {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.setView([latitude, longitude], 13);
+          if (startMarker) map.removeLayer(startMarker);
+          startMarker = L.marker([latitude, longitude]).addTo(map);
+          document.getElementById('startLocation').value = `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+          currentStep = 'end';
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          alert('No se pudo obtener tu ubicación actual');
+        }
+      );
+    } else {
+      alert('Tu navegador no soporta geolocalización');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    initMap();
+    
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          map.setView([latitude, longitude], 13);
+        },
+        () => {
+          console.log('Using default location (Buenos Aires)');
+        }
+      );
+    }
+
+    document.getElementById('useCurrentLocation').addEventListener('click', getCurrentLocation);
+    document.getElementById('calculateRoute').addEventListener('click', calculateRoute);
+    document.getElementById('resetRoute').addEventListener('click', resetRoute);
+    document.getElementById('swapLocations').addEventListener('click', swapLocations);
+    document.getElementById('costPerKm').addEventListener('input', updateCost);
+  });
+</script>
