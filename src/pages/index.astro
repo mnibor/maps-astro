@@ -3,24 +3,52 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Planificador de Rutas">
-  <main>
-    <div class="container">
-      <h1>Planificador de Rutas</h1>
-      <div class="options">
-        <a href="/simple-route" class="option-card">
-          <h2>Ruta entre dos puntos</h2>
-          <p>Calcula la mejor ruta entre un punto de origen y un destino</p>
-        </a>
-        <a href="/multi-stop" class="option-card">
-          <h2>Ruta con paradas intermedias</h2>
-          <p>Planifica una ruta con múltiples paradas entre el origen y el destino</p>
-        </a>
+  <div class="wrapper">
+    <main>
+      <div class="container">
+        <h1>Planificador de Rutas</h1>
+        <div class="options">
+          <a href="/simple-route" class="option-card">
+            <h2>Ruta entre dos puntos</h2>
+            <p>Calcula la mejor ruta entre un punto de origen y un destino</p>
+          </a>
+          <a href="/multi-stop" class="option-card">
+            <h2>Ruta con paradas intermedias</h2>
+            <p>Planifica una ruta con múltiples paradas entre el origen y el destino</p>
+          </a>
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+    <footer>
+      <p>Copyright © {new Date().getFullYear()} Synergy2Devs - Desarrollado por Marcelo Robin</p>
+    </footer>
+  </div>
 </Layout>
 
 <style>
+  /* Usamos body como contenedor principal para Flexbox */
+  body {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 100vh;
+    margin: 0;
+    font-family: 'Montserrat', sans-serif; /* Agrega esta línea */
+  }
+
+  .wrapper {
+    display: grid;
+    grid-template-rows: 1fr auto;
+    min-height: 100vh;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  h1, h2 {
+    font-family: 'Montserrat', sans-serif; /* Agrega esta línea */
+    font-weight: 700; /* Opcional: Usa el peso 700 (bold) para los encabezados */
+  }
+
+  /* ... resto de tus estilos ... */
+
   .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -68,5 +96,18 @@ import Layout from '../layouts/Layout.astro';
   p {
     color: #666;
     line-height: 1.6;
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding: 1rem;
+    background-color: #f5f5f5;
+    border-top: 1px solid #ddd;
+  }
+
+  footer p {
+    color: #777;
+    font-size: 0.9rem;
   }
 </style>

@@ -4,10 +4,12 @@
   <div class="search-controls">
     <div class="input-group">
       <input type="text" id="startLocation" placeholder="Ubicación de salida (ej: Obelisco, Buenos Aires)" />
+      <ul id="startSuggestions" class="suggestions-list"></ul>
       <button id="useCurrentLocation">Mi ubicación</button>
     </div>
     <div class="input-group">
       <input type="text" id="endLocation" placeholder="Ubicación de llegada (ej: Congreso, Buenos Aires)" />
+      <ul id="endSuggestions" class="suggestions-list"></ul>
       <button id="swapLocations" title="Intercambiar origen y destino">
         <span>↑↓</span>
       </button>
@@ -64,6 +66,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    position: relative;
   }
 
   input {
@@ -143,6 +146,31 @@
   #costInfo {
     color: #28a745;
   }
+
+  .suggestions-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 0 0 4px 4px;
+    padding: 0;
+    margin-top: 0;
+    list-style-type: none;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1001;
+  }
+  
+  .suggestions-list li {
+    padding: 8px;
+    cursor: pointer;
+  }
+  
+  .suggestions-list li:hover {
+    background: #f0f0f0;
+  }
 </style>
 
 <script>
@@ -150,6 +178,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     const map = initMap();
-    setupSimpleRouteHandlers(map);
+    setupSimpleRouteHandlers();
   });
 </script>
+
